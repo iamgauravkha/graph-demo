@@ -98,7 +98,7 @@ const SAMPLE_CURVES = Object.entries(RAW).map(([speed, rows]) => ({
 
 /* Datasheet text: layout and sample values from the Reso-630 PDF page */
 const DEFAULT_SHEET = {
-  company: "KUMARAN",
+  company: "KUMARAN ENGINEERING BHOPAL PVT. LTD.",
   brand: "KOHMER",
   tagline: "Moving Air Adding Value",
   modelPrefix: "Plug Fan Model: KDPF - ",
@@ -106,7 +106,7 @@ const DEFAULT_SHEET = {
     { head: true, label: "Description", value: "Value", unit: "" },
     { label: "Reference Density :", value: "1.204", unit: "kg/m³" },
     { label: "Medium Temperature :", value: "20", unit: "°C" },
-    { label: "Maximum Fan Weight :", value: "161", unit: "kg" },
+    { label: "Maximum Fan Weight :", value: "37", unit: "kg" },
     { head: true, label: "Feed data" },
     { label: "Frequency :", value: "50", unit: "Hz" },
     { head: true, label: "Rated motor data" },
@@ -115,67 +115,67 @@ const DEFAULT_SHEET = {
       value: "415 V / 3 Phase / 50 Hz",
       unit: "",
     },
-    { label: "Frame Size :", value: "132 S", unit: "" },
-    { label: "Power (Pₙ):", value: "7.5", unit: "kW" },
-    { label: "Speed (Nₙ):", value: "1455", unit: "min⁻¹" },
-    { label: "Current (Iₙ):", value: "15.3", unit: "A" },
+    { label: "Frame Size :", value: "80 M", unit: "" },
+    { label: "Power (Pₙ):", value: "1.1", unit: "kW" },
+    { label: "Speed (Nₙ):", value: "2840", unit: "min⁻¹" },
+    { label: "Current (Iₙ):", value: "2.5", unit: "A" },
     { head: true, label: "Operational limits" },
-    { label: "Maximum Fan Speed (nMax.):", value: "1740", unit: "min⁻¹" },
-    { label: "Minimum Fan Speed (nMin.):", value: "756", unit: "min⁻¹" },
+    { label: "Maximum Fan Speed (nMax.):", value: "3450", unit: "min⁻¹" },
+    { label: "Minimum Fan Speed (nMin.):", value: "1440", unit: "min⁻¹" },
   ],
   dims1: [
-    ["A", "795"],
-    ["B", "437.5"],
+    ["A", "440"],
+    ["B", "245"],
     ["C", "50"],
-    ["D", "625"],
-    ["E", "760"],
-    ["F", "398"],
-    ["G", "811"],
-    ["H", "715"],
-    ["I", "674"],
+    ["D", "330"],
+    ["E", "430"],
+    ["F", "202"],
+    ["G", "454"],
+    ["H", "390"],
+    ["I", "356"],
   ],
   dims2: [
     ["J", "-"],
-    ["K", "12"],
-    ["L", "610"],
-    ["M", "640"],
-    ["N", "12"],
-    ["O", "635"],
-    ["P", "80"],
-    ["n x J", "5 x 112"],
+    ["K", "10"],
+    ["L", "302"],
+    ["M", "324"],
+    ["N", "11"],
+    ["O", "320"],
+    ["P", "50"],
+    ["n x J", "3 x 100"],
   ],
   soundRows: [
     {
-      q: "15401",
+      q: "3463",
       p: "0",
-      n: "1440",
-      w: "2.275",
-      b: ["92", "98", "99", "95", "93", "89", "94", "92"],
-      overall: "100",
+      n: "2850",
+      w: "0.410",
+      b: ["99", "81", "90", "92", "88", "86", "86", "85"],
+      overall: "95",
     },
     {
-      q: "12917",
-      p: "497",
-      n: "1440",
-      w: "3.194",
-      b: ["88", "93", "93", "90", "89", "86", "85", "80"],
-      overall: "94",
-    },
-    {
-      q: "9468",
-      p: "1006",
-      n: "1440",
-      w: "3.889",
-      b: ["91", "95", "93", "87", "86", "82", "80", "75"],
+      q: "2932",
+      p: "440",
+      n: "2850",
+      w: "0.566",
+      b: ["98", "82", "89", "87", "85", "82", "82", "73"],
       overall: "91",
     },
     {
-      q: "3960",
-      p: "1124",
-      n: "1440",
-      w: "2.896",
-      b: ["94", "97", "96", "91", "89", "84", "80", "74"],
-      overall: "94",
+      q: "2241",
+      p: "909",
+      n: "2850",
+      w: "0.707",
+      b: ["98", "80", "85", "85", "83", "81", "77", "71"],
+      overall: "88",
+    },
+    {
+      q: "1553",
+      p: "1099",
+      n: "2850",
+      w: "0.640",
+      b: ["99", "82", "90", "88", "84", "83", "78", "71"],
+      overall: "90",
     },
   ],
   footnote:
@@ -192,13 +192,15 @@ const DEFAULT_SHEET = {
   },
 };
 
+/* from/to are the sheet's operational limits (nMin/nMax), which is the
+   range the published chart covers - not the range of the test speeds. */
 const DEFAULT_OPTS = {
   log: true,
   minEff: 50,
-  fill: false,
-  from: 2880,
+  fill: true,
+  from: 1440,
   to: 3450,
-  step: 100,
+  step: 250,
 };
 const BANDS = ["63", "125", "250", "500", "1000", "2000", "4000", "8000"];
 
@@ -353,28 +355,41 @@ function scaleCurve(ref, n) {
 function buildCurves(measured, opts) {
   const base = measured.filter((c) => c.speed > 0 && c.points.length);
   if (!base.length) return [];
-  const out = base.map((c) => ({ ...c, calc: false }));
-  if (opts.fill && opts.step > 0 && opts.to >= opts.from) {
-    const speeds = [];
-    for (let n = opts.from; n < opts.to && speeds.length < 30; n += opts.step)
-      speeds.push(Math.round(n));
-    speeds.push(Math.round(opts.to));
-    speeds
-      .filter((n) => n > 0 && !out.some((c) => c.speed === n))
-      .forEach((n) => {
-        const ref = base.reduce((a, c) =>
-          Math.abs(c.speed - n) < Math.abs(a.speed - n) ? c : a,
-        );
-        out.push(scaleCurve(ref, n));
-      });
-  }
-  return out.sort((a, b) => a.speed - b.speed);
+  if (!(opts.fill && opts.step > 0 && opts.to > opts.from))
+    return base
+      .map((c) => ({ ...c, calc: false }))
+      .sort((a, b) => a.speed - b.speed);
+
+  /* The sheet publishes one clean speed ladder over the operational limits
+     rather than the raw test speeds laid on top of it: steps of `step` up
+     from `from`, always ending on `to`. A step landing within half a step
+     of `to` is dropped, so 1440..3450 by 250 gives the sheet's nine curves
+     and not a doubled 3440/3450 pair at the top. */
+  const speeds = [];
+  for (let n = opts.from; n < opts.to && speeds.length < 30; n += opts.step)
+    if (opts.to - n > opts.step / 2) speeds.push(Math.round(n));
+  speeds.push(Math.round(opts.to));
+
+  return speeds.map((n) => {
+    const m = base.find((c) => c.speed === n);
+    if (m) return { ...m, calc: false };
+    /* nearest measured speed is the reference, as the sheet does: its
+       2940 curve carries 2880's shape */
+    return scaleCurve(
+      base.reduce((a, c) =>
+        Math.abs(c.speed - n) < Math.abs(a.speed - n) ? c : a,
+      ),
+      n,
+    );
+  });
 }
 
 /* ================================================================== */
 /*  Axis helpers                                                       */
 /* ================================================================== */
-const STEPS = [1, 1.5, 2, 3, 4, 5, 7];
+/* The sheet's decade is divided 1 / 1.5 / 2 / 3 / 4 / 5 - its pressure axis
+   reads 50 100 150 200 300 400 500 1000 1500 2000, with no 70 or 700. */
+const STEPS = [1, 1.5, 2, 3, 4, 5];
 function niceLogDomain(min, max) {
   const cand = [];
   for (
@@ -521,7 +536,11 @@ const LEGEND = [
   },
 ];
 
-function PerformanceChart({ curves, opts, height = 660 }) {
+/* The sheet's plot area is square (~1040 x 1010). Inside the 920pt page the
+   plot is ~732 wide once the axes and margins are taken off, so 790 of chart
+   height squares it up - at 660 the curves were horizontally stretched and
+   read much shallower than the printed ones. */
+function PerformanceChart({ curves, opts, height = 790 }) {
   const [show, setShow] = useState({
     rpm: true,
     power: true,
@@ -538,34 +557,44 @@ function PerformanceChart({ curves, opts, height = 660 }) {
       pt.q != null &&
       pt.p != null &&
       (log ? pt.q > 0 && pt.p > 0 : pt.q >= 0 && pt.p >= 0);
-    const okW = (pt) =>
-      pt &&
-      pt.q != null &&
-      pt.w != null &&
-      (log ? pt.q > 0 && pt.w > 0 : pt.q >= 0 && pt.w >= 0);
     const byQ = (a, b) => a.q - b.q;
     const tagged = (c, pt) => ({ ...pt, speed: c.speed, calc: c.calc });
 
-    const rpmLines = curves.map((c) => ({
+    /* The sheet does not publish the low-flow stall side of the curve. Its
+       Keso-315 plot stops dead on the 59.9% point, carries no 30.9% iso
+       line, and that is why its airflow axis starts near 500 and not 150.
+       Plotting that 30.9% row is what dragged the left-hand end of every
+       power curve back down after its peak. So the low-flow points under
+       minEff come off; the free-delivery side stays whole, since the sheet
+       does plot its 49.4% end. */
+    const eff = (pt) => (pt.eff == null ? -1 : pt.eff);
+    const useful = curves.map((c) => {
+      const pts = [...c.points].sort(byQ);
+      let bi = 0;
+      pts.forEach((pt, i) => {
+        if (eff(pt) > eff(pts[bi])) bi = i;
+      });
+      let lo = 0;
+      for (let i = bi; i >= 0; i--)
+        if (eff(pts[i]) >= 0 && eff(pts[i]) < opts.minEff) {
+          lo = i + 1;
+          break;
+        }
+      return { ...c, points: pts.slice(lo) };
+    });
+
+    const rpmLines = useful.map((c) => ({
       ...c,
       data: c.points
         .filter(okP)
         .map((pt) => tagged(c, pt))
         .sort(byQ),
     }));
-    const powerLines = curves.map((c) => ({
-      ...c,
-      data: c.points
-        .filter(okW)
-        .map((pt) => tagged(c, pt))
-        .sort(byQ),
-    }));
-
     /* iso-efficiency lines: same row index across all speeds */
-    const maxLen = Math.max(0, ...curves.map((c) => c.points.length));
+    const maxLen = Math.max(0, ...useful.map((c) => c.points.length));
     const isoLines = [];
     for (let i = 0; i < maxLen; i++) {
-      const data = curves
+      const data = useful
         .map((c) => (okP(c.points[i]) ? tagged(c, c.points[i]) : null))
         .filter(Boolean)
         .sort(byQ);
@@ -581,7 +610,7 @@ function PerformanceChart({ curves, opts, height = 660 }) {
       const f = (a.eff - t) / (a.eff - b.eff);
       return { q: a.q + (b.q - a.q) * f, p: a.p + (b.p - a.p) * f };
     };
-    curves.forEach((c) => {
+    useful.forEach((c) => {
       const pts = c.points
         .filter((pt) => pt.eff != null && pt.q != null && pt.p != null)
         .sort(byQ);
@@ -610,10 +639,8 @@ function PerformanceChart({ curves, opts, height = 660 }) {
       .map((l) => l.sort(byQ));
 
     const allP = rpmLines.flatMap((l) => l.data);
-    const allW = powerLines.flatMap((l) => l.data);
-    const qs = [...allP, ...allW].map((d) => d.q).filter((v) => v > 0);
+    const qs = allP.map((d) => d.q).filter((v) => v > 0);
     const ps = allP.map((d) => d.p).filter((v) => v > 0);
-    const ws = allW.map((d) => d.w).filter((v) => v > 0);
     if (!qs.length || !ps.length) return null;
 
     const [minQ, maxQ, minP, maxP] = [
@@ -622,27 +649,65 @@ function PerformanceChart({ curves, opts, height = 660 }) {
       Math.min(...ps),
       Math.max(...ps),
     ];
-    const minW = ws.length ? Math.min(...ws) : 0.1,
-      maxW = ws.length ? Math.max(...ws) : 1;
 
-    let x, p, w;
+    let x, p;
     if (log) {
-      x = niceLogDomain(minQ / 1.05, maxQ * 1.3);
-      p = niceLogDomain(minP / 1.6, maxP * 1.5);
-      w = { domain: [minW / 1.4, maxW * 3.2] };
+      /* The printed sheet brackets the data with the nearest nice decade
+         step and adds no slack of its own: Keso-315 spans 60-1637 Pa and
+         the sheet's pressure axis is exactly 50-2000. */
+      x = niceLogDomain(minQ, maxQ);
+      p = niceLogDomain(minP, maxP);
     } else {
       x = { domain: [0, Math.ceil((maxQ * 1.2) / 500) * 500] };
       p = { domain: [0, Math.ceil((maxP * 1.3) / 100) * 100] };
-      w = { domain: [0, maxW * 1.6] };
     }
+    const inDomain = (pt) =>
+      pt.q >= x.domain[0] &&
+      pt.q <= x.domain[1] &&
+      pt.p >= p.domain[0] &&
+      pt.p <= p.domain[1];
 
-    /* extend each power curve horizontally to the right edge, like the datasheet */
-    powerLines.forEach((l) => {
-      const last = l.data[l.data.length - 1];
-      if (last) l.data = [...l.data, { ...last, q: x.domain[1], ext: true }];
-    });
+    /* Iso-power contours - lines of CONSTANT power across the flow/pressure
+       plane, the way a fan catalogue draws them. A power curve on its own
+       right-hand axis has no readable relation to the pressure curves: you
+       cannot get the power at a duty point from it. Contours can be read,
+       because every speed curve runs between two of them, and a point's
+       power is interpolated from the two values that bracket it.
 
-    return { rpmLines, powerLines, isoLines, rangeLines, x, p, w };
+       Along one row index the fan laws give q ~ r, p ~ r^2 and w ~ r^3, so
+       the point on that row carrying power w0 sits at r = cbrt(w0 / w) from
+       any curve that already carries it. Walking the row indices traces the
+       contour, and its high-flow end lands on the red selection line, where
+       the sheet runs a flat leader out to the value in the right margin.
+
+       One contour per plotted speed, valued at that speed's free-delivery
+       power - which is the set the sheet labels. */
+    const freeDelivery = (c) => {
+      const d = c.points.filter((pt) => pt.q > 0 && pt.w > 0).sort(byQ).pop();
+      return d ? d.w : null;
+    };
+    const isoPower = [...new Set(useful.map(freeDelivery))]
+      .filter((w0) => w0 != null && w0 > 0)
+      .sort((a, b) => a - b)
+      .map((w0) => {
+        const data = [];
+        for (let i = 0; i < maxLen; i++) {
+          const ref = useful.find((c) => c.points[i]?.w > 0 && okP(c.points[i]));
+          if (!ref) continue;
+          const src = ref.points[i];
+          const r = Math.cbrt(w0 / src.w);
+          const pt = { q: src.q * r, p: src.p * r * r, w: w0, speed: ref.speed * r };
+          if (okP(pt) && inDomain(pt)) data.push(pt);
+        }
+        data.sort(byQ);
+        /* flat leader from the contour's high-flow end to the margin */
+        const end = data[data.length - 1];
+        if (end) data.push({ ...end, q: x.domain[1], ext: true });
+        return { w: w0, data };
+      })
+      .filter((l) => l.data.length > 2);
+
+    return { rpmLines, isoPower, isoLines, rangeLines, x, p };
   }, [curves, log, opts.minEff]);
 
   if (!chart)
@@ -695,22 +760,15 @@ function PerformanceChart({ curves, opts, height = 660 }) {
     );
   };
 
+  /* the kW value printed in the right margin, at the end of the leader */
   const powerDot = (line) => (props) => {
     const { cx, cy, payload, index } = props;
-    if (cx == null) return <g key={index} />;
-    if (payload.ext)
-      return (
-        <text
-          key={`w${line.speed}`}
-          x={cx + 5}
-          y={cy + 3}
-          fontSize={9.5}
-          fill={C.power}
-        >
-          {trim(payload.w)}
-        </text>
-      );
-    return <g key={`w${line.speed}-${index}`}>{hoverCircle(props)}</g>;
+    if (cx == null || !payload.ext) return <g key={index} />;
+    return (
+      <text key={`w${line.w}`} x={cx + 5} y={cy + 3} fontSize={9.5} fill={C.power}>
+        {trim(payload.w)}
+      </text>
+    );
   };
 
   const isoDot =
@@ -815,12 +873,13 @@ function PerformanceChart({ curves, opts, height = 660 }) {
                 }}
               />
             </YAxis>
+            {/* right-hand axis carries only the caption now: power is read
+                off the contours in the plane, not off a scale of its own */}
             <YAxis
               yAxisId="w"
               orientation="right"
               type="number"
-              scale={scale}
-              domain={chart.w.domain}
+              domain={[0, 1]}
               tick={false}
               axisLine={false}
               tickLine={false}
@@ -856,16 +915,15 @@ function PerformanceChart({ curves, opts, height = 660 }) {
               />
             ))}
             {show.power &&
-              chart.powerLines.map((l) => (
+              chart.isoPower.map((l) => (
                 <Line
-                  key={`w${l.speed}`}
-                  yAxisId="w"
+                  key={`w${l.w}`}
+                  yAxisId="p"
                   data={l.data}
-                  dataKey="w"
+                  dataKey="p"
                   type="monotone"
                   stroke={C.power}
                   strokeWidth={1.2}
-                  strokeOpacity={l.calc ? 0.6 : 1}
                   dot={powerDot(l)}
                   activeDot={false}
                   isAnimationActive={false}
@@ -2019,7 +2077,7 @@ const BASE_CSS = `
 /* ================================================================== */
 export default function FanDatasheet() {
   const [data, setData] = useState({
-    model: "KESO-315",
+    model: "Keso-315",
     curves: SAMPLE_CURVES,
     sheet: DEFAULT_SHEET,
     opts: DEFAULT_OPTS,
